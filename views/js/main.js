@@ -1,3 +1,4 @@
+
 /*
 Welcome to the 60fps project! Your goal is to make Cam's Pizzeria website run
 jank-free at 60 frames per second.
@@ -446,10 +447,7 @@ var resizePizzas = function(size) {
   // Iterates through pizza elements on the page and changes their widths
   function changePizzaSizes(size) {
 
-    // Unrolling loop to improve performance. The basis of this is
-    // limiting the number of iterations can mitigate the performance
-    // overhead of a loop. Which means making each iteration do the work
-    // of multiple iterations.
+    // Unrolling loop to improve performance.
     switch(size) {
       case "1":
         newWidth = 25;
@@ -464,15 +462,15 @@ var resizePizzas = function(size) {
         console.log("bug in sizeSwitcher");
     }
 
-  // Using a local variable instead of a property lookup can speed up the loops.
-  // Using getElementsByClassName instead of querySelectorAll is faster way to access the DOM.
-  // Modify width changes and remove px calculation.
-
-  var randomPizzas = document.getElementsByClassName("randomPizzaContainer");
-  // Stores the length of the randomPizzas HTMLCollection in a local variable, limiting the
-  // number of times the object is accessed directly
-    for (var i = 0, randomPizzasLength = randomPizzas.length; i < randomPizzasLength; i++) {
-        randomPizzas[i].style.width = newWidth + "%";
+  var randomPizzaContainer = document.getElementsByClassName("randomPizzaContainer");
+        var randomPizzaContainerLength = randomPizzaContainer.length;
+        // Only need to calculate dx once based on one of the pizzas since
+        // they are all the same size
+        var dx = determineDx(randomPizzaContainer[0], size);
+        // Only need to calculate newwidth once as well
+        var newwidth = (randomPizzaContainer[0].offsetWidth + dx) + 'px';
+        for (var i = 0; i < randomPizzaContainerLength; i++) {
+            randomPizzaContainer[i].style.width = newwidth;
     }
   }
 
@@ -488,7 +486,6 @@ var resizePizzas = function(size) {
 window.performance.mark("mark_start_generating"); // collect timing data
 
 // Improves loading performance moved elements outside the loop.
-// Using a local variable instead of a property lookup can speed up the loops.
 var pizzasDiv = document.getElementById("randomPizzas");
 // This for-loop actually creates and appends all of the pizzas when the page loads
 for (var i = 2; i < 100; i++) {
@@ -523,15 +520,6 @@ function updatePositions() {
   frame++;
   window.performance.mark("mark_start_frame");
 
-  // Using local variables is especially important when dealing
-  // with HTMLCollection objects.
-  // Using getElementsByClassName is faster way to access the
-  // DOM than querySelectorAll.
-  // getElementsByClassName return a DynamicNodeList, meaning
-  // it is live and changes to the DOM will be automatically
-  // reflected in the collection. Conversely, querySelectorAll
-  // returns a StaticNodeList that serves as a snapshot of the
-  // DOM unaffected by changes.
   // http://ryanmorr.com/abstract-away-the-performance-faults-of-queryselectorall
   var items = document.getElementsByClassName('mover');
 
