@@ -32,7 +32,7 @@ Profile, optimize, measure... and then lather, rinse, and repeat. Good luck!
 
 #### Part 2: Optimize Frames per Second in pizza.html
 
-To optimize views/pizza.html, you will need to modify views/js/main.js until your frames per second rate is 60 fps or higher. You will find instructive comments in main.js. 
+To optimize views/pizza.html, you will need to modify views/js/main.js until your frames per second rate is 60 fps or higher. You will find instructive comments in main.js.
 
 You might find the FPS Counter/HUD Display useful in Chrome developer tools described here: [Chrome Dev Tools tips-and-tricks](https://developer.chrome.com/devtools/docs/tips-and-tricks).
 
@@ -53,3 +53,15 @@ The portfolio was built on Twitter's <a href="http://getbootstrap.com/">Bootstra
 
 * <a href="http://getbootstrap.com/css/">Bootstrap's CSS Classes</a>
 * <a href="http://getbootstrap.com/components/">Bootstrap's Components</a>
+
+### To run locally
+Open index.html in your browser
+
+### Major optimization made to the project
+* Compressed the images
+* Improved loading performance moved elements outside the loop.
+* Calculated dx only once based on one of the pizza as they are of same sizes.
+* Calculate newwidth once as well.
+* Calculates the five phase into its own for loop that appends each phase to an array.
+* Max number of pizza number is now dynamic, based on screen height.
+* Using document.getElementById() Web API call is faster , hence querySelector was replaced.
