@@ -1,16 +1,12 @@
 /*
 Welcome to the 60fps project! Your goal is to make Cam's Pizzeria website run
 jank-free at 60 frames per second.
-
 There are two major issues in this code that lead to sub-60fps performance. Can
 you spot and fix both?
-
-
 Built into the code, you'll find a few instances of the User Timing API
 (window.performance), which will be console.log()ing frame rate data into the
 browser console. To learn more about User Timing API, check out:
 http://www.html5rocks.com/en/tutorials/webperformance/usertiming/
-
 Creator:
 Cameron Pittman, Udacity Course Developer
 cameron *at* udacity *dot* com
@@ -406,13 +402,13 @@ var resizePizzas = function(size) {
   function changeSliderLabel(size) {
     switch(size) {
       case "1":
-        document.getElementById("#pizzaSize").innerHTML = "Small";
+        document.querySelector("#pizzaSize").innerHTML = "Small";
         return;
       case "2":
-        document.getElementById('id')("#pizzaSize").innerHTML = "Medium";
+        document.querySelector("#pizzaSize").innerHTML = "Medium";
         return;
       case "3":
-        document.getElementById('id')("#pizzaSize").innerHTML = "Large";
+        document.querySelector("#pizzaSize").innerHTML = "Large";
         return;
       default:
         console.log("bug in changeSliderLabel");
@@ -424,7 +420,7 @@ var resizePizzas = function(size) {
    // Returns the size difference to change a pizza element from one size to another. Called by changePizzaSlices(size).
   function determineDx (elem, size) {
     var oldWidth = elem.offsetWidth;
-    var windowWidth = document.getElementById('id')("#randomPizzas").offsetWidth;
+    var windowWidth = document.querySelector("#randomPizzas").offsetWidth;
     var oldSize = oldWidth / windowWidth;
 
     // Changes the slider value to a percent width
@@ -449,10 +445,34 @@ var resizePizzas = function(size) {
 
   // Iterates through pizza elements on the page and changes their widths
   function changePizzaSizes(size) {
-    for (var i = 0; i < document.getElementsByClassName(".randomPizzaContainer").length; i++) {
-      var dx = determineDx(document.getElementsByClassName(".randomPizzaContainer")[i], size);
-      var newwidth = (document.getElementsByClassName(".randomPizzaContainer")[i].offsetWidth + dx) + 'px';
-      document.getElementsByClassName(".randomPizzaContainer")[i].style.width = newwidth;
+
+    // Unrolling loop to improve performance. The basis of this is
+    // limiting the number of iterations can mitigate the performance
+    // overhead of a loop. Which means making each iteration do the work
+    // of multiple iterations.
+    switch(size) {
+      case "1":
+        newWidth = 25;
+        break;
+      case "2":
+        newWidth = 33.3;
+        break;
+      case "3":
+        newWidth = 50;
+        break;
+      default:
+        console.log("bug in sizeSwitcher");
+    }
+
+  // Using a local variable instead of a property lookup can speed up the loops.
+  // Using getElementsByClassName instead of querySelectorAll is faster way to access the DOM.
+  // Modify width changes and remove px calculation.
+
+  var randomPizzas = document.getElementsByClassName("randomPizzaContainer");
+  // Stores the length of the randomPizzas HTMLCollection in a local variable, limiting the
+  // number of times the object is accessed directly
+    for (var i = 0, randomPizzasLength = randomPizzas.length; i < randomPizzasLength; i++) {
+        randomPizzas[i].style.width = newWidth + "%";
     }
   }
 
@@ -467,8 +487,10 @@ var resizePizzas = function(size) {
 
 window.performance.mark("mark_start_generating"); // collect timing data
 
-// This for-loop actually creates and appends all of the pizzas when the page loads
+// Improves loading performance moved elements outside the loop.
+// Using a local variable instead of a property lookup can speed up the loops.
 var pizzasDiv = document.getElementById("randomPizzas");
+// This for-loop actually creates and appends all of the pizzas when the page loads
 for (var i = 2; i < 100; i++) {
   pizzasDiv.appendChild(pizzaElementGenerator(i));
 }
@@ -501,14 +523,30 @@ function updatePositions() {
   frame++;
   window.performance.mark("mark_start_frame");
 
-  var items = document.getElementsByClassName('.mover');
+  // Using local variables is especially important when dealing
+  // with HTMLCollection objects.
+  // Using getElementsByClassName is faster way to access the
+  // DOM than querySelectorAll.
+  // getElementsByClassName return a DynamicNodeList, meaning
+  // it is live and changes to the DOM will be automatically
+  // reflected in the collection. Conversely, querySelectorAll
+  // returns a StaticNodeList that serves as a snapshot of the
+  // DOM unaffected by changes.
+  // http://ryanmorr.com/abstract-away-the-performance-faults-of-queryselectorall
+  var items = document.getElementsByClassName('mover');
+
+  // Calculates the five phase into its own for loop that appends each phase to an array,
+  // rather than declaring and setting the phase variable each time.
   var phase = [];
   var top = document.body.scrollTop / 1250;
-    for (var i = 0; i < 5; i++) {
-        phase.push(Math.sin(top + i) * 100);
-    }
-  for (var i = 0; i < items.length; i++) {
-    items[i].style.left = items[i].basicLeft + 100 * phase + 'px';
+  for (var i = 0; i < 5; i++) {
+      phase.push(Math.sin(top + i) * 100);
+  }
+
+  //The pizza item positions are changed by accessing the relevant element of the phase array,
+  //rather than reusing the phase variable.
+  for (var i = 0, max = items.length; i < max; i++) {
+    items[i].style.left = items[i].basicLeft + phase[i % 5] + 'px';
   }
 
   // User Timing API to the rescue again. Seriously, it's worth learning.
@@ -525,11 +563,19 @@ function updatePositions() {
 window.addEventListener('scroll', updatePositions);
 
 // Generates the sliding pizzas when the page loads.
-movingPizaa = document.getElementById("#movingPizzas1");
 document.addEventListener('DOMContentLoaded', function() {
   var cols = 8;
   var s = 256;
-  for (var i = 0 ,elem; i < 200; i++) {
+  // Generates max number of pizza number is now dynamic, based on screen height
+  var rows = Math.ceil(window.screen.height / s);
+  var numberOfPizzas = rows * cols;
+
+  // Using document.getElementById() Web API call is faster, saved this
+  // DOM call outside the for statement and save it into a local variable.
+  var movingPizzas = document.getElementById('movingPizzas1');
+  // Declaring the elem variable (var elem;) in the initialization of the for-loop
+  // will prevent it from being created every time the loop is executed.
+  for (var i = 0, elem; i < numberOfPizzas; i++) {
     elem = document.createElement('img');
     elem.className = 'mover';
     elem.src = "images/pizza.png";
@@ -537,7 +583,7 @@ document.addEventListener('DOMContentLoaded', function() {
     elem.style.width = "73.333px";
     elem.basicLeft = (i % cols) * s;
     elem.style.top = (Math.floor(i / cols) * s) + 'px';
-    movingPizaa.appendChild(elem);
+    movingPizzas.appendChild(elem);
   }
   updatePositions();
 });
